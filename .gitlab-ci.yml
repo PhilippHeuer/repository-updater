@@ -1,0 +1,58 @@
+####
+# GitLab CI
+####
+
+# Image
+image: openjdk:8-jdk-alpine
+
+# Cache
+cache:
+  key: gradle
+  paths:
+  - .gradle/wrapper
+  - .gradle/caches
+
+services:
+- docker:dind
+
+variables:
+  # Note that if you're using Kubernetes executor, the variable should be set to
+  # tcp://localhost:2375 because of how Kubernetes executor connects services
+  # to the job container
+  DOCKER_HOST: tcp://docker:2375/
+  DOCKER_DRIVER: overlay2
+
+# Stages
+stages:
+- build
+- test
+- docker
+- docs
+
+# Build
+Assemble:
+  stage: build
+  script:
+  - export GRADLE_USER_HOME=`pwd`/.gradle
+  - ./gradlew assemble
+  artifacts:
+    paths:
+    - build/libs
+    expire_in: 1 week
+
+# Test
+Run Tests:
+  stage: test
+  script:
+  - export GRADLE_USER_HOME=`pwd`/.gradle
+  - ./gradlew test
+
+# Docker
+Assemble Docker Container:
+  image: docker:stable
+  stage: docker
+  script:
+  - cp build/libs/*.jar docker/rootfs/app.jar
+  - docker build -t $CI_REGISTRY_IMAGE:$CI_COMMIT_REF_SLUG docker
+  - docker login -u gitlab-ci-token -p $CI_JOB_TOKEN $CI_REGISTRY
+  - docker push $CI_REGISTRY_IMAGE:$CI_COMMIT_REF_SLUG

@@ -1,0 +1,5 @@
+#!/bin/bash
+set -e
+
+# Run App
+java -Djava.security.egd=file:/dev/./urandom -XX:+UnlockExperimentalVMOptions -XX:+UseCGroupMemoryLimitForHeap -XX:MaxRAMFraction=1 -XX:+AlwaysPreTouch -XX:-TieredCompilation -XX:+UseStringDeduplication -XX:+UseG1GC -jar /app.jar -action deploy ${@:1}
