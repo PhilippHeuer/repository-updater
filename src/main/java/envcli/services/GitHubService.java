@@ -190,7 +190,7 @@ public class GitHubService {
                             log.info(String.format("Created new tag in repository [v%s].", upstreamVersion.toString()));
 
                             // push branches
-                            Process cmdPush = Runtime.getRuntime().exec("git push -u origin --follow-tags", null, fileRepoContentDirectory);
+                            Process cmdPush = Runtime.getRuntime().exec(String.format("git push --follow-tags https://%s:%s@github.com/%s/%s.git master", username, password, repository.getOwnerName(), repository.getName()), null, fileRepoContentDirectory);
                             cmdPush.waitFor();
 
                             // create release for tag
