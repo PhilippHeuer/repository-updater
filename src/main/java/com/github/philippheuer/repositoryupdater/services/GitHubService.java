@@ -1,10 +1,11 @@
-package envcli.services;
+package com.github.philippheuer.repositoryupdater.services;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.dataformat.yaml.YAMLFactory;
 import com.github.zafarkhaja.semver.Version;
-import envcli.domain.UpdateConfigFile;
-import lombok.extern.java.Log;
+import com.github.philippheuer.repositoryupdater.domain.UpdateConfigFile;
+import com.github.philippheuer.repositoryupdater.util.ExecHelper;
+import lombok.extern.slf4j.Slf4j;
 import okhttp3.Call;
 import okhttp3.OkHttpClient;
 import okhttp3.Request;
@@ -20,7 +21,7 @@ import java.io.FileWriter;
 import java.util.*;
 
 @Service()
-@Log
+@Slf4j
 public class GitHubService {
 
     @Value("${github.username}")
@@ -92,7 +93,7 @@ public class GitHubService {
                             // nothing
                         }
                         if (upstreamRepository == null) {
-                            log.warning("Can't find upstream repository ... skipping!");
+                            log.warn("Can't find upstream repository ... skipping!");
                             return;
                         }
                         log.info("Current version in repository is: " + currentVersion.toString());
@@ -152,8 +153,11 @@ public class GitHubService {
                             fileRepoDirectory.mkdirs();
 
                             // git clone
-                            Process cmdGitClone = Runtime.getRuntime().exec(String.format("git clone https://%s:%s@github.com/%s/%s.git", username, password, repository.getOwnerName(), repository.getName()), null, fileRepoDirectory);
-                            cmdGitClone.waitFor();
+                            Optional<String> gitCloneCmd = ExecHelper.runCommandAndCatchOutput(fileRepoDirectory, String.format("git clone https://%s:%s@github.com/%s/%s.git", username, password, repository.getOwnerName(), repository.getName()));
+                            if (!gitCloneCmd.isPresent()) {
+                                log.error("Failed to execute git clone ... skipping! - " + gitCloneCmd.get());
+                                return;
+                            }
 
                             // modify file
                             String fileContent = "";
@@ -178,20 +182,35 @@ public class GitHubService {
                             log.info("Updated Dockerfile ENV VERSION for latest release.");
 
                             // commit
-                            Process cmdGitStage = Runtime.getRuntime().exec("git add Dockerfile", null, fileRepoContentDirectory);
-                            cmdGitStage.waitFor();
-                            Process cmdGitCommit = Runtime.getRuntime().exec(String.format("git commit --no-gpg-sign --author=\"%s <%s>\" -m \"feature: upgrade to v%s\"", authorName, authorEmail, upstreamVersion.toString()), null, fileRepoContentDirectory);
-                            cmdGitCommit.waitFor();
+                            Optional<String> gitAddCmd = ExecHelper.runCommandAndCatchOutput(fileRepoContentDirectory, "git add Dockerfile");
+                            if (!gitAddCmd.isPresent()) {
+                                log.error("Failed to execute git add ... skipping! - " + gitAddCmd.get());
+                                return;
+                            }
+
+                            Optional<String> gitCommitCmd = ExecHelper.runCommandAndCatchOutput(fileRepoContentDirectory, String.format("git commit --no-gpg-sign --author=\"%s <%s>\" -m \"feature: upgrade to v%s\"", authorName, authorEmail, upstreamVersion.toString()));
+                            if (!gitCommitCmd.isPresent()) {
+                                log.error("Failed to execute git commit ... skipping! - " + gitCommitCmd.get());
+                                return;
+                            }
+
                             log.info(String.format("Created commit to upgrade to [v%s].", upstreamVersion.toString()));
 
                             // create tag
-                            Process cmdGitCreateTag = Runtime.getRuntime().exec(String.format("git tag -a v%s -m \"Release %s\"", upstreamVersion.toString(), upstreamVersion.toString()), null, fileRepoContentDirectory);
-                            cmdGitCreateTag.waitFor();
+                            Optional<String> gitTagCmd = ExecHelper.runCommandAndCatchOutput(fileRepoContentDirectory, String.format("git tag -a v%s -m \"Release %s\"", upstreamVersion.toString(), upstreamVersion.toString()));
+                            if (!gitTagCmd.isPresent()) {
+                                log.error("Failed to execute git tag ... skipping! - " + gitTagCmd.get());
+                                return;
+                            }
+
                             log.info(String.format("Created new tag in repository [v%s].", upstreamVersion.toString()));
 
                             // push branches
-                            Process cmdPush = Runtime.getRuntime().exec(String.format("git push --follow-tags https://%s:%s@github.com/%s/%s.git master", username, password, repository.getOwnerName(), repository.getName()), null, fileRepoContentDirectory);
-                            cmdPush.waitFor();
+                            Optional<String> gitPushCmd = ExecHelper.runCommandAndCatchOutput(fileRepoContentDirectory, String.format("git push --follow-tags https://%s:%s@github.com/%s/%s.git master", username, password, repository.getOwnerName(), repository.getName()));
+                            if (!gitPushCmd.isPresent()) {
+                                log.error("Failed to execute git push ... skipping! - " + gitPushCmd.get());
+                                return;
+                            }
 
                             // create release for tag
                             StringBuilder releaseNotes = new StringBuilder();
@@ -212,16 +231,16 @@ public class GitHubService {
                             // cleanup
                             fileRepoDirectory.delete();
                         } else {
-                            log.warning("Repository is already up2date!");
+                            log.warn("Repository is already up2date!");
                         }
                     } else {
-                        log.warning("Repository does not contain config file to automated upgrades!");
+                        log.warn("Repository does not contain config file to automated upgrades!");
                     }
 
-                    log.warning("Waiting 1 second before checking the next repo ...");
+                    log.warn("Waiting 1 second before checking the next repo ...");
                     Thread.sleep(1000);
                 } catch (Exception ex) {
-                    log.warning("Unexpected error: " + ex.getMessage());
+                    log.warn("Unexpected error: " + ex.getMessage());
                     ex.printStackTrace();
                 }
             });

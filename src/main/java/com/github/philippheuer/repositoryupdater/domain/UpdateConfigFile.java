@@ -1,10 +1,16 @@
-package envcli.domain;
+package com.github.philippheuer.repositoryupdater.domain;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.Data;
 
 @Data
 public class UpdateConfigFile {
+    /**
+     * Source Type
+     */
+    @JsonProperty("type")
+    private String type = "github";
+
     /**
      * Repository Namespace
      */

@@ -1,4 +1,4 @@
-package envcli;
+package com.github.philippheuer.repositoryupdater;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.Banner;
@@ -6,7 +6,7 @@ import org.springframework.boot.CommandLineRunner;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.scheduling.annotation.EnableScheduling;
-import envcli.services.GitHubService;
+import com.github.philippheuer.repositoryupdater.services.GitHubService;
 
 @EnableScheduling
 @SpringBootApplication
