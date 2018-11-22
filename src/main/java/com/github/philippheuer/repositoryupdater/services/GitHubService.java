@@ -202,7 +202,7 @@ public class GitHubService {
                             log.info(String.format("Created commit to upgrade to [v%s].", upstreamVersion.toString()));
 
                             // create tag
-                            Optional<String> gitTagCmd = ExecHelper.runCommandAndCatchOutput(fileRepoContentDirectory, String.format("git tag -a v%s -m \"Release %s\"", upstreamVersion.toString(), upstreamVersion.toString()));
+                            Optional<String> gitTagCmd = ExecHelper.runCommandAndCatchOutput(fileRepoContentDirectory, String.format("git tag -a v%s -m 'Release %s'", upstreamVersion.toString(), upstreamVersion.toString()));
                             if (!gitTagCmd.isPresent()) {
                                 log.error("Failed to execute git tag ... skipping! - " + gitTagCmd.get());
                                 return;

@@ -1,6 +1,7 @@
 package com.github.philippheuer.repositoryupdater.util;
 
 import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.lang3.SystemUtils;
 
 import java.io.BufferedReader;
 import java.io.File;
@@ -13,9 +14,18 @@ public class ExecHelper {
     public static Optional<String> runCommandAndCatchOutput(File directory, String command) {
         String line;
 
+        String[] execCommand;
+        if (SystemUtils.IS_OS_LINUX) {
+            String[] commands = {"bash", "-c", command};
+            execCommand = commands;
+        } else {
+            String[] commands = {command};
+            execCommand = commands;
+        }
+        
         try {
             StringBuilder stringBuilder = new StringBuilder();
-            Process procInst = Runtime.getRuntime().exec(command, null, directory);
+            Process procInst = Runtime.getRuntime().exec(execCommand, null, directory);
             procInst.waitFor();
 
             // clean up if any output in stdout

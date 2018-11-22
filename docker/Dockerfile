@@ -3,7 +3,7 @@
 ############################################################
 
 # Set the base image
-FROM openjdk:8-jdk-alpine
+FROM openjdk:11-jdk-oracle
 
 ############################################################
 # Installation
@@ -13,7 +13,7 @@ FROM openjdk:8-jdk-alpine
 COPY rootfs /
 
 # Setup
-RUN apk add --no-cache bash git
+RUN yum install -y bash git
 
 ############################################################
 # Execution
