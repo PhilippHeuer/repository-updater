@@ -151,6 +151,7 @@ public class GitHubService {
                             File fileRepoDirectory = new File(repoDirectory);
                             File fileRepoContentDirectory = new File(repoContentDirectory);
                             fileRepoDirectory.mkdirs();
+                            log.info("Current working directory: " + fileRepoDirectory);
 
                             // git clone
                             Optional<String> gitCloneCmd = ExecHelper.runCommandAndCatchOutput(fileRepoDirectory, String.format("git clone https://%s:%s@github.com/%s/%s.git", username, password, repository.getOwnerName(), repository.getName()));
@@ -192,7 +193,7 @@ public class GitHubService {
                                 return;
                             }
 
-                            Optional<String> gitCommitCmd = ExecHelper.runCommandAndCatchOutput(fileRepoContentDirectory, String.format("git commit --no-gpg-sign -m \"feature: upgrade to v%s\"", upstreamVersion.toString()));
+                            Optional<String> gitCommitCmd = ExecHelper.runCommandAndCatchOutput(fileRepoContentDirectory, String.format("git commit --no-gpg-sign -m 'feature: upgrade to v%s'", upstreamVersion.toString()));
                             if (!gitCommitCmd.isPresent()) {
                                 log.error("Failed to execute git commit ... skipping! - " + gitCommitCmd.get());
                                 return;
