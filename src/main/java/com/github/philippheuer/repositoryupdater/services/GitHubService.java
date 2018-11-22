@@ -159,6 +159,10 @@ public class GitHubService {
                                 return;
                             }
 
+                            // repo config
+                            ExecHelper.runCommandAndCatchOutput(fileRepoContentDirectory, String.format("git config user.email \"%s\"", authorEmail));
+                            ExecHelper.runCommandAndCatchOutput(fileRepoContentDirectory, String.format("git config user.name \"%s\"", authorName));
+
                             // modify file
                             String fileContent = "";
                             BufferedReader reader = new BufferedReader(new FileReader(repoContentDirectory + "/" + "Dockerfile"));
@@ -188,7 +192,7 @@ public class GitHubService {
                                 return;
                             }
 
-                            Optional<String> gitCommitCmd = ExecHelper.runCommandAndCatchOutput(fileRepoContentDirectory, String.format("git commit --no-gpg-sign --author=\"%s <%s>\" -m \"feature: upgrade to v%s\"", authorName, authorEmail, upstreamVersion.toString()));
+                            Optional<String> gitCommitCmd = ExecHelper.runCommandAndCatchOutput(fileRepoContentDirectory, String.format("git commit --no-gpg-sign -m \"feature: upgrade to v%s\"", upstreamVersion.toString()));
                             if (!gitCommitCmd.isPresent()) {
                                 log.error("Failed to execute git commit ... skipping! - " + gitCommitCmd.get());
                                 return;
