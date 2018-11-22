@@ -22,7 +22,7 @@ public class ExecHelper {
             String[] commands = {command};
             execCommand = commands;
         }
-        
+
         try {
             StringBuilder stringBuilder = new StringBuilder();
             Process procInst = Runtime.getRuntime().exec(execCommand, null, directory);
