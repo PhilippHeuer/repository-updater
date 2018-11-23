@@ -3,7 +3,7 @@
 ############################################################
 
 # Set the base image
-FROM openjdk:11-jdk-oracle
+FROM adoptopenjdk/openjdk11:jdk-11.28-alpine
 
 ############################################################
 # Installation
@@ -13,7 +13,7 @@ FROM openjdk:11-jdk-oracle
 COPY rootfs /
 
 # Setup
-RUN yum install -y bash git
+RUN apk add --no-cache bash git
 
 ############################################################
 # Execution
