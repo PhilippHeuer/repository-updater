@@ -2,6 +2,7 @@ package com.github.philippheuer.repositoryupdater.services;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.dataformat.yaml.YAMLFactory;
+import com.github.philippheuer.repositoryupdater.util.VersionHelper;
 import com.github.zafarkhaja.semver.Version;
 import com.github.philippheuer.repositoryupdater.domain.UpdateConfigFile;
 import com.github.philippheuer.repositoryupdater.util.ExecHelper;
@@ -78,7 +79,7 @@ public class GitHubService {
                         UpdateConfigFile configFile = yamlMapper.readValue(response.body().string(), UpdateConfigFile.class);
 
                         // current version
-                        Version currentVersion = Version.valueOf(repository.getLatestRelease() == null ? "0.0.0" : repository.getLatestRelease().getTagName().replace("v", ""));
+                        Version currentVersion = Version.valueOf(repository.getLatestRelease() == null ? "0.0.0" : VersionHelper.makeValid(repository.getLatestRelease().getTagName()));
 
                         // get latest release from the upstream repo
                         GHRepository upstreamRepository = null;
@@ -117,7 +118,7 @@ public class GitHubService {
                         // iterate over all tags
                         for(GHTag tag : tagList) {
                             try {
-                                Version tempVersion = Version.valueOf(tag.getName().replace("v", ""));
+                                Version tempVersion = Version.valueOf(VersionHelper.makeValid(tag.getName()));
                                 // ignore pre-releases
                                 if (tempVersion.getPreReleaseVersion().isEmpty() && tempVersion.greaterThan(upstreamVersion) && tempVersion.greaterThan(currentVersion)) {
                                     upstreamVersion = tempVersion;
